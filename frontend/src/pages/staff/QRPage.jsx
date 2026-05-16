@@ -3,7 +3,6 @@ import { QrCode, Download, Printer } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import toast from 'react-hot-toast'
 
-const CUSTOMER_URL = import.meta.env.VITE_CUSTOMER_URL || 'http://localhost:5173'
 const TABLES = Array.from({ length: 20 }, (_, i) => i + 1)
 
 export default function QRPage() {
@@ -11,7 +10,8 @@ export default function QRPage() {
   const [tableCount, setTableCount] = useState(10)
   const qrRef = useRef(null)
 
-  const getQRUrl = (tableNum) => `${CUSTOMER_URL}/menu?table=${tableNum}`
+  // Use current window origin for QR codes so they always point to the correct live domain
+  const getQRUrl = (tableNum) => `${window.location.origin}/menu?table=${tableNum}`
 
   const downloadQR = () => {
     const svg = qrRef.current?.querySelector('svg')

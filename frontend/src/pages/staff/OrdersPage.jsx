@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, RefreshCw, ChevronDown, ChevronUp, User, MapPin, Clock, CreditCard, Banknote, CheckCircle, Package, Truck, XCircle, Trash2 } from 'lucide-react'
+import { Search, RefreshCw, ChevronDown, ChevronUp, ShoppingBag, Clock, CheckCircle, Package, Truck, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
@@ -13,7 +13,6 @@ const STATUS_TABS = [
   { value: 'in_progress', label: 'Diproses' },
   { value: 'ready', label: 'Siap Ambil' },
   { value: 'completed', label: 'Selesai' },
-  { value: 'cancelled', label: 'Dibatalkan' },
 ]
 
 export default function OrdersPage() {
@@ -26,9 +25,13 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       const { data } = await api.get('/orders')
-      setOrders(data.data)
-    } catch { toast.error('Gagal memuat pesanan') }
-    finally { setLoading(false) }
+      setOrders(Array.isArray(data?.data) ? data.data : [])
+    } catch (err) { 
+      toast.error('Gagal memuat pesanan') 
+      setOrders([])
+    } finally { 
+      setLoading(false) 
+    }
   }
 
   useEffect(() => {
@@ -45,97 +48,120 @@ export default function OrdersPage() {
     } catch { toast.error('Gagal memperbarui status') }
   }
 
-  const filtered = orders
-    .filter(o => filterStatus === 'all' || o.status === filterStatus)
-    .filter(o =>
-      o.table_number.toLowerCase().includes(search.toLowerCase()) ||
-      o.id.toString().includes(search) ||
-      (o.customer_name || '').toLowerCase().includes(search.toLowerCase())
+  const filtered = (orders || []).filter(o => {
+    if (!o) return false
+    const matchStatus = filterStatus === 'all' || o.status === filterStatus
+    const s = search.toLowerCase()
+    return matchStatus && (
+      (o.table_number || '').toString().toLowerCase().includes(s) ||
+      (o.id || '').toString().includes(s) ||
+      (o.customer_name || '').toLowerCase().includes(s)
     )
+  })
 
   return (
-    <div className="animate-fade-in space-y-10">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+    <div className="animate-fade-in space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-5xl font-serif font-medium text-gray-900 tracking-tight">Pesanan</h1>
-          <p className="italic-accent text-gray-400 mt-2">Kelola alur kerja pesanan pelanggan secara real-time.</p>
+          <h1 className="text-4xl font-bold text-[#111]">Daftar Pesanan</h1>
+          <p className="text-sm text-[#999] mt-1 italic font-serif">Monitoring alur kerja pesanan secara real-time.</p>
         </div>
-        <button onClick={fetchOrders} className="btn-secondary flex items-center gap-2 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl">
+        <button onClick={fetchOrders} className="btn-secondary flex items-center gap-2 py-2.5 px-5">
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-          Refresh
+          <span className="text-xs uppercase tracking-wider font-bold">Refresh</span>
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-        {STATUS_TABS.map(tab => (
-          <button
-            key={tab.value}
-            onClick={() => setFilterStatus(tab.value)}
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-              filterStatus === tab.value
-                ? 'bg-primary-800 text-white shadow-lg shadow-primary-800/10'
-                : 'bg-white text-gray-500 border border-gray-100 hover:border-primary-200'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Stats Quick View */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="card p-4 bg-white">
+          <p className="text-[10px] font-bold text-[#999] uppercase tracking-widest mb-1">Total Aktif</p>
+          <p className="text-2xl font-bold text-[#111]">{orders.filter(o => o.status !== 'completed').length}</p>
+        </div>
+        <div className="card p-4 bg-white">
+          <p className="text-[10px] font-bold text-[#999] uppercase tracking-widest mb-1">Menunggu Bayar</p>
+          <p className="text-2xl font-bold text-amber-600">{orders.filter(o => o.status === 'waiting_payment').length}</p>
+        </div>
+        <div className="card p-4 bg-white">
+          <p className="text-[10px] font-bold text-[#999] uppercase tracking-widest mb-1">Sedang Proses</p>
+          <p className="text-2xl font-bold text-indigo-600">{orders.filter(o => o.status === 'in_progress').length}</p>
+        </div>
+        <div className="card p-4 bg-white">
+          <p className="text-[10px] font-bold text-[#999] uppercase tracking-widest mb-1">Siap Ambil</p>
+          <p className="text-2xl font-bold text-green-600">{orders.filter(o => o.status === 'ready').length}</p>
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="relative group max-w-xl">
-        <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-primary-800 transition-colors" />
-        <input
-          value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Cari meja, nama, atau ID pesanan..."
-          className="w-full pl-14 pr-6 py-4 rounded-[1.5rem] border border-gray-100 bg-white focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:outline-none transition-all font-semibold"
-        />
+      {/* Controls */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Cari meja atau nama..."
+            className="input-field pl-11 py-3.5"
+          />
+        </div>
+        <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+          {STATUS_TABS.map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => setFilterStatus(tab.value)}
+              className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+                filterStatus === tab.value ? 'bg-[#111] text-white' : 'bg-white text-[#666] border border-[#eee] hover:border-[#ddd]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Orders List */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {loading && orders.length === 0 ? (
           <div className="flex justify-center py-20"><div className="spinner" /></div>
         ) : filtered.length === 0 ? (
-          <div className="card p-20 text-center text-gray-400">
+          <div className="card p-20 text-center text-[#999] bg-gray-50/50">
             <ShoppingBag size={48} className="mx-auto mb-4 opacity-10" />
-            <p className="font-bold text-lg">Tidak ada pesanan ditemukan</p>
+            <p className="font-serif text-lg italic">Tidak ada pesanan ditemukan</p>
           </div>
         ) : (
           filtered.map(order => (
-            <motion.div
-              layout
+            <div
               key={order.id}
-              className={`card overflow-hidden group border-gray-100/50 hover:border-primary-800/20 hover:shadow-xl hover:shadow-primary-900/5 transition-all duration-500 ${expandedId === order.id ? 'ring-2 ring-primary-800/10' : ''}`}
+              className={`card bg-white transition-all duration-300 ${expandedId === order.id ? 'border-[#111] shadow-md' : 'border-[#eee]'}`}
             >
               <div
-                className="p-6 cursor-pointer flex items-center gap-6"
+                className="p-5 cursor-pointer flex items-center gap-5"
                 onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
               >
-                <div className="w-14 h-14 bg-gray-900 text-white rounded-2xl flex items-center justify-center font-black text-lg shrink-0 shadow-lg shadow-gray-900/10 transition-transform group-hover:scale-105">
-                  {order.table_number}
+                <div className="w-12 h-12 bg-[#111] text-white rounded-lg flex items-center justify-center font-bold text-lg">
+                  {order.table_number || '?'}
                 </div>
-                <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="font-bold text-gray-900 text-lg tracking-tight">Meja {order.table_number} <span className="text-gray-300 font-normal ml-2">#{order.id}</span></p>
+                    <h3 className="font-bold text-[#111] flex items-center gap-2">
+                      Meja {order.table_number} 
+                      <span className="text-[#999] font-medium text-xs">#{order.id}</span>
+                    </h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`badge badge-${order.status.replace('_', '-')}`}>{STATUS_TABS.find(t=>t.value===order.status)?.label}</span>
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(order.created_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' })}</span>
+                      <span className={`badge badge-${(order.status || 'waiting_payment').replace('_', '-')}`}>
+                        {STATUS_TABS.find(t=>t.value===order.status)?.label || 'Status'}
+                      </span>
+                      <span className="text-[10px] font-bold text-[#bbb] uppercase">{order.created_at ? new Date(order.created_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }) : ''}</span>
                     </div>
                   </div>
                   <div className="hidden md:block">
-                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total</p>
-                    <p className="font-serif text-xl font-medium text-primary-800">{formatRupiah(order.total_amount)}</p>
+                    <p className="text-[9px] font-bold text-[#bbb] uppercase tracking-widest mb-0.5">Total Tagihan</p>
+                    <p className="font-bold text-[#111]">{formatRupiah(order.total_amount || 0)}</p>
                   </div>
                   <div className="hidden md:flex items-center gap-2">
-                    <span className={`badge ${order.payment_method === 'online' ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-50 text-gray-500'}`}>
-                      {order.payment_method === 'online' ? '💳 Online' : '💵 Cash'}
-                    </span>
-                    {order.customer_name && <span className="text-xs font-bold text-gray-600 truncate">👤 {order.customer_name}</span>}
+                     <span className="text-[10px] font-bold bg-gray-100 px-2 py-1 rounded text-[#666] uppercase">{order.payment_method}</span>
+                     {order.customer_name && <span className="text-xs font-medium text-[#666]">👤 {order.customer_name}</span>}
                   </div>
                 </div>
-                {expandedId === order.id ? <ChevronUp size={20} className="text-gray-300" /> : <ChevronDown size={20} className="text-gray-300" />}
+                {expandedId === order.id ? <ChevronUp size={18} className="text-[#999]" /> : <ChevronDown size={18} className="text-[#999]" />}
               </div>
 
               <AnimatePresence>
@@ -144,88 +170,53 @@ export default function OrdersPage() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="border-t border-gray-50 bg-gray-50/30 overflow-hidden"
+                    className="border-t border-[#f5f5f5] bg-[#fafafa]/50 overflow-hidden"
                   >
-                    <div className="p-8 grid md:grid-cols-2 gap-10">
-                      {/* Left: Items */}
+                    <div className="p-6 grid md:grid-cols-2 gap-8">
                       <div>
-                        <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Daftar Pesanan</h3>
-                        <div className="space-y-3">
-                          {order.items?.map(item => (
-                            <div key={item.id} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100/50 shadow-sm">
-                              <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center font-bold text-gray-400 text-xs">x{item.quantity}</div>
-                                <span className="font-bold text-gray-800">{item.menu_name}</span>
+                        <h4 className="text-[10px] font-bold text-[#999] uppercase tracking-widest mb-4">Detail Pesanan</h4>
+                        <div className="space-y-2">
+                          {(order.items || []).map(item => (
+                            <div key={item.id} className="flex justify-between items-center bg-white p-3 rounded-lg border border-[#eee]">
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-bold text-[#111] bg-gray-50 w-6 h-6 flex items-center justify-center rounded">x{item.quantity}</span>
+                                <span className="text-sm font-medium text-[#111]">{item.menu_name}</span>
                               </div>
-                              <span className="font-serif text-lg font-medium text-gray-900">{formatRupiah(item.subtotal)}</span>
+                              <span className="text-sm font-bold text-[#111]">{formatRupiah(item.subtotal)}</span>
                             </div>
                           ))}
-                          <div className="pt-4 flex justify-between items-center border-t border-dashed border-gray-200">
-                            <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Total Bayar</span>
-                            <span className="font-serif text-2xl font-medium text-primary-800">{formatRupiah(order.total_amount)}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-6">
+                        <div>
+                          <h4 className="text-[10px] font-bold text-[#999] uppercase tracking-widest mb-4">Aksi Workflow</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {order.status === 'waiting_payment' && (
+                              <button onClick={() => updateStatus(order.id, 'paid')} className="btn-primary py-2 px-4 text-xs">Konfirmasi Pembayaran</button>
+                            )}
+                            {order.status === 'paid' && (
+                              <button onClick={() => updateStatus(order.id, 'in_progress')} className="btn-primary py-2 px-4 text-xs bg-indigo-600 hover:bg-indigo-700">Mulai Proses</button>
+                            )}
+                            {order.status === 'in_progress' && (
+                              <button onClick={() => updateStatus(order.id, 'ready')} className="btn-primary py-2 px-4 text-xs bg-orange-600 hover:bg-orange-700">Pesanan Siap</button>
+                            )}
+                            {order.status === 'ready' && (
+                              <button onClick={() => updateStatus(order.id, 'completed')} className="btn-primary py-2 px-4 text-xs">Selesaikan</button>
+                            )}
                           </div>
                         </div>
                         {order.notes && (
-                          <div className="mt-6 p-4 bg-white border-l-4 border-primary-800 rounded-r-2xl shadow-sm">
-                            <p className="text-[10px] font-black text-primary-800 uppercase tracking-widest mb-1">Catatan</p>
-                            <p className="text-sm italic-accent text-gray-600">"{order.notes}"</p>
+                          <div className="p-4 bg-white border border-[#eee] rounded-lg">
+                            <p className="text-[9px] font-bold text-[#999] uppercase tracking-widest mb-1">Catatan</p>
+                            <p className="text-sm text-[#444] italic">"{order.notes}"</p>
                           </div>
                         )}
-                      </div>
-
-                      {/* Right: Actions */}
-                      <div className="flex flex-col gap-6">
-                        <div>
-                          <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Update Status</h3>
-                          <div className="grid grid-cols-2 gap-2">
-                            {STATUS_TABS.slice(1).map(s => (
-                              <button
-                                key={s.value}
-                                onClick={() => updateStatus(order.id, s.value)}
-                                disabled={order.status === s.value}
-                                className={`px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-                                  order.status === s.value
-                                    ? 'bg-gray-100 text-gray-400'
-                                    : 'bg-white border border-gray-100 hover:border-primary-800 hover:text-primary-800 shadow-sm active:scale-95'
-                                }`}
-                              >
-                                {s.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="pt-6 border-t border-gray-100">
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Workflow Cepat</p>
-                          <div className="flex flex-wrap gap-2">
-                            {order.status === 'waiting_payment' && (
-                              <button onClick={() => updateStatus(order.id, 'paid')} className="btn-primary py-2.5 px-6 text-xs flex items-center gap-2">
-                                <CheckCircle size={14} /> Konfirmasi Bayar
-                              </button>
-                            )}
-                            {order.status === 'paid' && (
-                              <button onClick={() => updateStatus(order.id, 'in_progress')} className="btn-primary bg-indigo-600 py-2.5 px-6 text-xs flex items-center gap-2">
-                                <Clock size={14} /> Mulai Proses
-                              </button>
-                            )}
-                            {order.status === 'in_progress' && (
-                              <button onClick={() => updateStatus(order.id, 'ready')} className="btn-primary bg-orange-600 py-2.5 px-6 text-xs flex items-center gap-2">
-                                <Package size={14} /> Pesanan Siap
-                              </button>
-                            )}
-                            {order.status === 'ready' && (
-                              <button onClick={() => updateStatus(order.id, 'completed')} className="btn-primary py-2.5 px-6 text-xs flex items-center gap-2">
-                                <Truck size={14} /> Selesaikan
-                              </button>
-                            )}
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
           ))
         )}
       </div>

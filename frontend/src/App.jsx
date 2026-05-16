@@ -31,15 +31,20 @@ export default function App() {
           duration: 3000,
           style: {
             borderRadius: '12px',
-            fontFamily: 'Poppins, sans-serif',
+            background: '#ffffff',
+            color: '#1a1a1a',
+            border: '1px solid #f0f0f0',
+            fontFamily: 'Inter, sans-serif',
             fontSize: '14px',
             fontWeight: 500,
           },
         }}
       />
       <Routes>
-        {/* Customer routes - public */}
-        <Route path="/" element={<Navigate to="/menu" replace />} />
+        {/* Root redirects to Login for staff */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        
+        {/* Customer routes - accessible via QR */}
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
@@ -62,8 +67,8 @@ export default function App() {
           <Route path="qr" element={<QRPage />} />
         </Route>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/menu" replace />} />
+        {/* Fallback to Login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
   )
