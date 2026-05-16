@@ -1,5 +1,6 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const DB_PATH = process.env.DB_PATH || './scancafe.db';
@@ -19,7 +20,24 @@ function initializeDatabase() {
       role TEXT DEFAULT 'pegawai',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+    -- ... (rest of tables)
+  `);
 
+  // Seeding Admin User if not exists
+  const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@scancafe.com');
+  if (!adminExists) {
+    const hashedPassword = bcrypt.hashSync('password123', 10);
+    db.prepare('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)').run(
+      'Admin ScanCafe',
+      'admin@scancafe.com',
+      hashedPassword,
+      'admin'
+    );
+    console.log('✅ Admin user seeded');
+  }
+
+  // Ensure tables exist (repeat exec for safety if tables not created in first exec)
+  db.exec(`
     CREATE TABLE IF NOT EXISTS menus (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
