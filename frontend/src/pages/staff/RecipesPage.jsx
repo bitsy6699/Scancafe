@@ -75,71 +75,82 @@ export default function RecipesPage() {
       </div>
 
       <div className="space-y-3">
-        {menus.map(menu => {
-          const menuRecipes = getRecipesForMenu(menu.id)
-          const isOpen = expandedMenu === menu.id
-          return (
-            <div key={menu.id} className="card overflow-hidden">
-              <div
-                className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => setExpandedMenu(isOpen ? null : menu.id)}
-              >
-                <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center shrink-0">
-                  <BookOpen size={18} className="text-primary-700" />
+        {menus.length === 0 ? (
+          <div className="card p-8 text-center bg-gray-50/50 border border-dashed border-gray-200 rounded-2xl">
+            <BookOpen size={48} className="mx-auto text-gray-300 mb-3" />
+            <p className="font-semibold text-gray-800">Belum Ada Menu Cafe</p>
+            <p className="text-sm text-gray-500 mt-1 mb-6">Kamu harus menambahkan menu terlebih dahulu di halaman "Menu Cafe" sebelum bisa mengatur resep bahan bakunya.</p>
+            <a href="/dashboard/menu" className="btn-primary inline-flex items-center gap-2 text-xs py-2.5 px-4 mx-auto">
+              <Plus size={16} /> Buat Menu Sekarang
+            </a>
+          </div>
+        ) : (
+          menus.map(menu => {
+            const menuRecipes = getRecipesForMenu(menu.id)
+            const isOpen = expandedMenu === menu.id
+            return (
+              <div key={menu.id} className="card overflow-hidden">
+                <div
+                  className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setExpandedMenu(isOpen ? null : menu.id)}
+                >
+                  <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center shrink-0">
+                    <BookOpen size={18} className="text-primary-700" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-800">{menu.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {menuRecipes.length > 0 ? `${menuRecipes.length} bahan` : 'Belum ada resep'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`badge ${menu.is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {menu.is_available ? 'Tersedia' : 'Habis'}
+                    </span>
+                    {isOpen ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800">{menu.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {menuRecipes.length > 0 ? `${menuRecipes.length} bahan` : 'Belum ada resep'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`badge ${menu.is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {menu.is_available ? 'Tersedia' : 'Habis'}
-                  </span>
-                  {isOpen ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
-                </div>
-              </div>
 
-              {isOpen && (
-                <div className="border-t border-gray-100 bg-gray-50/50 p-4 animate-fade-in">
-                  {menuRecipes.length === 0 ? (
-                    <p className="text-sm text-gray-400 text-center py-3">Belum ada bahan baku untuk menu ini</p>
-                  ) : (
-                    <div className="space-y-2 mb-3">
-                      {menuRecipes.map(recipe => {
-                        const ing = ingredients.find(i => i.id === recipe.ingredient_id)
-                        const hasEnough = ing && ing.stock >= recipe.quantity_needed
-                        return (
-                          <div key={recipe.id} className="flex items-center justify-between bg-white rounded-xl p-3 border border-gray-100">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${hasEnough ? 'bg-green-400' : 'bg-red-400'}`} />
-                              <span className="text-sm font-medium text-gray-800">{recipe.ingredient_name}</span>
-                              <span className="text-xs text-gray-500">{recipe.quantity_needed} {recipe.unit}</span>
-                              {!hasEnough && <span className="badge bg-red-100 text-red-600">Kurang!</span>}
+                {isOpen && (
+                  <div className="border-t border-gray-100 bg-gray-50/50 p-4 animate-fade-in">
+                    {menuRecipes.length === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-3">Belum ada bahan baku untuk menu ini</p>
+                    ) : (
+                      <div className="space-y-2 mb-3">
+                        {menuRecipes.map(recipe => {
+                          const ing = ingredients.find(i => i.id === recipe.ingredient_id)
+                          const hasEnough = ing && ing.stock >= recipe.quantity_needed
+                          return (
+                            <div key={recipe.id} className="flex items-center justify-between bg-white rounded-xl p-3 border border-gray-100">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${hasEnough ? 'bg-green-400' : 'bg-red-400'}`} />
+                                <span className="text-sm font-medium text-gray-800">{recipe.ingredient_name}</span>
+                                <span className="text-xs text-gray-500">{recipe.quantity_needed} {recipe.unit}</span>
+                                {!hasEnough && <span className="badge bg-red-100 text-red-600">Kurang!</span>}
+                              </div>
+                              <button
+                                onClick={() => handleDeleteRecipe(recipe.id, menu.name)}
+                                className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 size={14} className="text-red-400" />
+                              </button>
                             </div>
-                            <button
-                              onClick={() => handleDeleteRecipe(recipe.id, menu.name)}
-                              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                            >
-                              <Trash2 size={14} className="text-red-400" />
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                  <button
-                    onClick={() => openAddRecipe(menu)}
-                    className="flex items-center gap-2 text-sm font-semibold text-primary-700 hover:text-primary-900 transition-colors"
-                  >
-                    <Plus size={16} /> Tambah Bahan ke Resep
-                  </button>
-                </div>
-              )}
-            </div>
-          )
-        })}
+                          )
+                        })}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => openAddRecipe(menu)}
+                      className="flex items-center gap-2 text-sm font-semibold text-primary-700 hover:text-primary-900 transition-colors"
+                    >
+                      <Plus size={16} /> Tambah Bahan ke Resep
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })
+        )}
       </div>
 
       {showModal && (

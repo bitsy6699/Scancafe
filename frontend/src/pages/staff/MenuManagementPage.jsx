@@ -7,9 +7,9 @@ const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://lo
 const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n)
 
 const CATEGORIES = [
-  { value: 'drinks', label: '☕ Minuman' },
-  { value: 'food', label: '🍞 Makanan' },
-  { value: 'snack', label: '🍪 Snack' },
+  { value: 'drinks', label: 'Minuman' },
+  { value: 'food', label: 'Makanan' },
+  { value: 'snack', label: 'Snack' },
 ]
 
 const emptyForm = { name: '', description: '', price: '', category: 'drinks', is_available: true }
@@ -134,7 +134,7 @@ export default function MenuManagementPage() {
           {['all', 'drinks', 'food', 'snack'].map(cat => (
             <button key={cat} onClick={() => setCategoryFilter(cat)}
               className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${categoryFilter === cat ? 'bg-primary-800 text-white border-primary-800' : 'bg-white text-gray-600 border-gray-200'}`}>
-              {cat === 'all' ? 'Semua' : cat === 'drinks' ? '☕ Minum' : cat === 'food' ? '🍞 Makan' : '🍪 Snack'}
+              {cat === 'all' ? 'Semua' : cat === 'drinks' ? 'Minuman' : cat === 'food' ? 'Makanan' : 'Snack'}
             </button>
           ))}
         </div>

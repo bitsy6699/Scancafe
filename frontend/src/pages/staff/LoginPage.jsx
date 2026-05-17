@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Coffee, ShieldCheck, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
+import api from '../../lib/api'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
@@ -17,15 +18,16 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const success = await login(email, password)
-      if (success) {
-        toast.success('Selamat datang kembali.')
+      const { data } = await api.post('/auth/login', { email, password })
+      if (data.success) {
+        login(data.user, data.token)
+        toast.success('Selamat datang kembali di ScanCafe.')
         navigate('/dashboard')
       } else {
         toast.error('Email atau kata sandi salah.')
       }
     } catch (err) {
-      toast.error('Terjadi kesalahan pada server.')
+      toast.error(err.response?.data?.message || 'Akses ditolak. Silakan periksa kembali email & kata sandi Anda.')
     } finally {
       setLoading(false)
     }

@@ -93,10 +93,10 @@ export default function ReportsPage() {
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl">
         {[
-          { id: 'summary', label: '📊 Ringkasan' },
-          { id: 'sales', label: '📈 Penjualan' },
-          { id: 'top', label: '🏆 Terlaris' },
-          { id: 'transactions', label: '📋 Transaksi' },
+          { id: 'summary', label: 'Ringkasan' },
+          { id: 'sales', label: 'Penjualan' },
+          { id: 'top', label: 'Terlaris' },
+          { id: 'transactions', label: 'Transaksi' },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all ${tab === t.id ? 'bg-white text-primary-800 shadow-sm' : 'text-gray-600'}`}>

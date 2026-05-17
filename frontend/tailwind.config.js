@@ -21,9 +21,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        serif: ['"Instrument Serif"', 'serif'],
-        display: ['"Instrument Serif"', 'serif'],
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        serif: ['Outfit', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
       },
       letterSpacing: {
         tighter: '-0.05em',

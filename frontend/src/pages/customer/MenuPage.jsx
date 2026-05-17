@@ -10,10 +10,10 @@ const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://lo
 const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n)
 
 const CATEGORIES = [
-  { value: 'all', label: 'Semua', subtitle: 'Jelajahi seluruh mahakarya kami.' },
-  { value: 'drinks', label: 'Minuman', subtitle: 'Segarkan harimu dengan pilihan racikan terbaik kami.' },
-  { value: 'food', label: 'Makanan', subtitle: 'Kenikmatan yang melengkapi setiap momen santaimu.' },
-  { value: 'snack', label: 'Snack', subtitle: 'Teman kecil untuk obrolan besar dan hangat.' },
+  { value: 'all', label: 'Semua', subtitle: 'Lihat semua menu makanan dan minuman kami.' },
+  { value: 'drinks', label: 'Minuman', subtitle: 'Kopi segar, teh, dan minuman dingin pilihan.' },
+  { value: 'food', label: 'Makanan', subtitle: 'Hidangan utama yang lezat dan mengenyangkan.' },
+  { value: 'snack', label: 'Snack', subtitle: 'Camilan ringan untuk menemani waktu santaimu.' },
 ]
 
 export default function MenuPage() {
@@ -118,13 +118,13 @@ export default function MenuPage() {
           >
             <div className="flex items-center gap-2 mb-2">
               <Sparkles size={16} className="text-amber-500 fill-amber-500" />
-              <span className="italic-accent text-sm text-amber-700">Mahakarya dalam setiap seduhan</span>
+              <span className="italic-accent">Pilihan Kopi & Menu Terbaik</span>
             </div>
-            <h2 className="font-serif text-4xl font-medium text-gray-900 leading-[1.1] tracking-tight">
-              ingin memulai perjalanan rasa apa kamu hari ini?
+            <h2 className="font-serif text-3xl font-bold text-gray-950 leading-tight tracking-tight">
+              Ingin minum apa kamu hari ini?
             </h2>
-            <p className="text-gray-500 text-sm font-medium mt-3 leading-relaxed max-w-sm">
-              Dari aroma yang memikat hingga kehangatan yang mendekap jiwa, temukan teman setiamu di setiap sudut rasa kami.
+            <p className="text-gray-500 text-sm mt-2 leading-relaxed max-w-md">
+              Pilih dari beragam racikan kopi khas kami serta hidangan lezat lainnya, langsung diantar ke mejamu.
             </p>
           </motion.div>
 
